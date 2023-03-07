@@ -1,0 +1,53 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(2,3,4,5,6,7);
+int tempPin = A0; // the output pin of LM34
+int fan = 11; // the pin where fan is
+int temp;
+int celcius;
+int tempMin = 25; // the temperature to start the fan 0%
+int tempMax = 35; // the maximum temperature when fan is at 100%
+int fanSpeed;
+int fanLCD;
+ 
+void setup() {
+pinMode(fan, OUTPUT);
+pinMode(tempPin, INPUT);
+lcd.begin(16,2);
+Serial.begin(9600);
+}
+ 
+void loop()
+{
+temp = readTemp(); // get the temperature
+Serial.print( temp );
+celcius=(temp-32)*(5/9);
+if(celcius < tempMin) // if temp is lower than minimum temp
+{
+fanSpeed = 0; // fan is not spinning
+analogWrite(fan, fanSpeed);
+fanLCD=0;
+digitalWrite(fan, LOW);
+}
+if((celcius >= tempMin) && (celcius <= tempMax)) // if temperature is higher than minimum temp
+{
+fanSpeed = celcius;//map(temp, tempMin, tempMax, 0, 100); // the actual speed of fan//map(temp, tempMin, tempMax, 32, 255);
+fanSpeed=1.5*fanSpeed;
+fanLCD = map(celcius, tempMin, tempMax, 0, 100); // speed of fan to display on LCD100
+analogWrite(fan, fanSpeed); // spin the fan at the fanSpeed speed
+}
+ 
+lcd.print("TEMP: ");
+lcd.print(temp); // display the temperature
+lcd.print("C ");
+lcd.setCursor(0,1); // move cursor to next line
+lcd.print("FANS: ");
+lcd.print(fanLCD); // display the fan speed
+lcd.print("%");
+delay(200);
+lcd.clear();
+}
+ 
+int readTemp() { // get the temperature and convert it to celsius
+temp = analogRead(tempPin);
+return temp * 0.48828125;
+}
